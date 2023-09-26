@@ -1,0 +1,113 @@
+-- This is an analyis to predict the fuel efficiency for highway driving given the engine’s displacement for each class of cars. I looked at statistical data using R Studio.--
+### load libraries 
+library('dplyr')
+library('ggplot2')
+
+--I set my working directory before importing my data but did not include it in this text--
+
+### import data file
+fueldata <- read.csv(file = "fueldata.csv")
+
+# Explore the dataset using 5 functions: dim(), str(), colnames(), head() and tail()
+dim(fueldata)
+str(fueldata)
+colnames(fueldata)
+head(fueldata)
+tail(fueldata)
+
+# Convert any column that is supposed to be treated as a factor 
+table(fueldata$FuelType)
+fueldata$FuelType<- as.factor(fueldata$FuelType)
+
+**How many observations and variables are in fueldata dataset? Which variables are numerical and which ones are categorical?**
+311 observations and 5 variables. 
+Displacement is numerical. Class and Fueltype is categorical.
+
+# Descriptive stats for Displacement and HwyMPG for each Class
+# Displacement
+fueldata %>%  summarise(mean_Displacement = mean(Displacement), sd_displacement = sd(Displacement))
+
+# HwyMPG
+fueldata %>%  summarise(mean_HwyMPG = mean(HwyMPG), sd_HwyMPG= sd(HwyMPG))
+
+# compute correlation between Displacement and HwyMPG for each Class
+fueldata %>% summarise(correlation = cor(Displacement, HwyMPG))
+
+** Which Class has the *highest* mean Highway MPG? Which Class has the *lowest* variability in Highway MPG? Explain. **
+Highest mean is HwyMPG at 25.84. The lowest variability is Displacement. 
+
+** What is the *correlation* between Displacement and HwyMPG for each Class? Does that imply a positive, negative or no relationship? Is the relationship strong? **
+The correlation between Displacement and HwyMPG is -0.83 which signify a strong negative relationship.
+
+### scatter plot of Displacement and HwyMPG for each Class using visuals
+
+## Compact 
+# Create a new data frame that only includes the data of Class Compact
+class_compact <- data.frame(filter(fueldata, Class == "Compact"))
+
+# scatter plot of Displacement and HwyMPG
+ggplot(class_compact, mapping = aes(y = HwyMPG, x = Displacement)) + 
+  geom_point() + 
+  geom_smooth(method = "lm",se = FALSE, color = "blue") + 
+  ggtitle("Displacement and HwyMPG for Class Compact") + 
+  ylab("HwyMPG") +
+  xlab("Displacement")
+
+
+## Midsize 
+# Create a new data frame that only includes the data of Class Midsize
+class_Midsize <- data.frame(filter(fueldata, Class == "Midsize"))
+
+# scatter plot of Displacement and HwyMPG
+ggplot(class_Midsize, mapping = aes(y = HwyMPG, x = Displacement)) + 
+  geom_point() + 
+  geom_smooth(method = "lm",se = FALSE, color = "blue") + 
+  ggtitle("Displacement and HwyMPG for Class Midsize") + 
+  ylab("HwyMPG") +
+  xlab("Displacement")
+
+
+## Large 
+# Create a new data frame that only includes the data of Class Large
+class_Large <- data.frame(filter(fueldata, Class == "Large"))
+
+# scatter plot of Displacement and HwyMPG
+ggplot(class_Large, mapping = aes(y = HwyMPG, x = Displacement)) + 
+  geom_point() + 
+  geom_smooth(method = "lm",se = FALSE, color = "blue") + 
+  ggtitle("Displacement and HwyMPG for Class Large") + 
+  ylab("HwyMPG") +
+  xlab("Displacement")
+
+
+# The impact of Displacement on HwyMPG
+
+## Regression Analysis for Class Compact
+reg_1 <- lm(HwyMPG~Displacement, data = class_compact)
+summary(reg_1)
+
+## Regression Analysis for Class Midsize
+reg_2 <- lm(HwyMPG~Displacement, data = class_Midsize)
+summary(reg_2)
+
+## Regression Analysis for Class Large
+reg_3 <- lm(HwyMPG~Displacement, data = class_Large)
+summary(reg_3)
+
+** We will look at our analysis to make future predictions. After performing the anaysis, midsize is predicted to have the highest HwyMPG**
+
+##Predict a future response for a new data
+# choosing the new value for Displacement
+Displacement_new <- data.frame(Displacement = 3)
+
+## Compact
+# predict HwyMPG using the predict function
+predict(reg_1, data.frame(Displacement = 3))
+
+## Midsize
+# predict HwyMPG using the predict function
+predict(reg_2, data.frame(Displacement = 3))
+
+## Large
+# predict HwyMPG using the predict function
+predict(reg_3, data.frame(Displacement = 3))
