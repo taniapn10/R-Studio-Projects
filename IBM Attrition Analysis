@@ -1,0 +1,202 @@
+--Here is my code used to report our statistical findings regarding attrition rates for IBM. This was a group Case Study.--  
+
+#installing packages
+install.packages("tidyverse")
+install.packages('skimr')
+install.packages('tidyverse')
+install.packages('ggplot2')
+install.packages('dplyr')
+install.packages('ggplot')
+library('skimr')
+library('tidyverse')
+library('ggplot2')
+library('dplyr')
+library('ggplot2')
+
+
+#importing file
+attrition<-read.csv(file.choose(),header=TRUE)
+summary (attrition)
+str(attrition)
+
+#Changing to numeric
+attrition$attrition <- as.numeric(attrition$attrition)
+
+#Creating subset
+employee<-subset(attrition)
+str(employee)
+
+#Creating dummy variables
+attrition$attrition<- ifelse(attrition$Attrition=="Yes",1,0)
+
+employee$male<-ifelse(Gender=="Male",1,0)
+employee$male<-as.factor(employee$male)
+employee$lifesciences<-ifelse(EducationField=="Life Sciences",1,0)
+employee$lifesciences<-as.factor(employee$lifesciences)
+employee$single<-ifelse(MaritalStatus=="Single",1,0)
+employee$single<-as.factor(employee$single)
+employee$salesrep<-ifelse(JobRole=="Sales Representative",1,0)
+employee$salesrep<-as.factor(employee$salesrep)
+employee$hr<-ifelse(JobRole=="Human Resources",1,0)
+employee$hr<-as.factor(employee$hr)
+employee$sales.ex<-ifelse(JobRole=="Sales Executive",1,0)
+employee$sales.ex<-as.factor(employee$sales.ex)
+employee$Travel_Frequently<-ifelse(BusinessTravel=="Travel_Frequently",1,0)
+employee$Travel_Frequently<-as.factor(employee$Travel_Frequently)
+employee$Travel_Rarely<-ifelse(BusinessTravel=="Travel_Rarely",1,0)
+employee$Travel_Rarely<-as.factor(employee$Travel_Rarely)
+employee$turnover<-ifelse(Attrition=="Yes",1,0)
+employee$turnover<-as.factor(employee$turnover)
+employee$overtime_yes<-ifelse(OverTime=="Yes",1,0)
+employee$overtime_yes<-as.factor(employee$overtime_yes)
+
+
+#Performing Anova
+Anova<-aov(attrition~Age+MonthlyIncome+JobSatisfaction+BusinessTravel+Department+DistanceFromHome+EducationField+Gender+JobRole+YearsInCurrentRole+YearsWithCurrManager+YearsSinceLastPromotion,data=attrition)
+summary(Anova)
+
+plot(density(MonthlyIncome))
+
+# Logistic Regression
+# Create a split
+indata <- attrition
+str(indata)
+summary(indata)
+
+# Split the data into train and test data
+set.seed(2061495)
+train_idx <- sample(nrow(employee),round(.9*nrow(employee)))
+train <- employee[train_idx,]
+test  <- employee[-train_idx,]
+testy <- test$turnover
+
+
+#Logistic 1
+logit1<-glm(formula=turnover~overtime_yes+Travel_Rarely+Travel_Frequently+sales.ex+hr+salesrep+single+lifesciences+male+ï..Age+MonthlyIncome+JobSatisfaction+BusinessTravel+Department+
+              DistanceFromHome+EducationField+Gender+JobRole+YearsInCurrentRole+YearsWithCurrManager+
+              YearsSinceLastPromotion+EnvironmentSatisfaction+PercentSalaryHike+
+              MaritalStatus,data=train, family=binomial(link=logit))
+summary(logit1)
+loghat1<-predict(logit1,newdata=test,type="response")
+conf_table(loghat1,testy,"Logit1")
+auc_plot(loghat1,testy,"Logit1")
+
+
+#Logistic 2
+logit2<-step(glm(formula=turnover~Travel_Frequently+sales.ex+hr+salesrep+single+lifesciences+male+ï..Age+MonthlyIncome+JobSatisfaction+BusinessTravel+Department+DistanceFromHome+EducationField+Gender+JobRole+YearsInCurrentRole+YearsWithCurrManager+YearsSinceLastPromotion
+                 +EnvironmentSatisfaction+PercentSalaryHike+
+                   MaritalStatus,data=train, family=binomial(link=logit)),direct="both")
+summary(logit2)
+loghat2<-predict(logit2,newdata=test,type="response")
+conf_table(loghat2,testy,"Logit2")
+auc_plot(loghat2,testy,"Logit2")
+
+#Logistic reg 3
+logit3<-step(glm(turnover~.,Age+BusinessTravel+DailyRate+Department+DistanceFromHome
+                 +Education+EducationField+EnvironmentSatisfaction+Gender+
+                   JobInvolvement+JobLevel+JobRole+JobSatisfaction+MaritalStatus+
+                   MonthlyIncome+MonthlyRate+NumCompaniesWorked+
+                   OverTime+PercentSalaryHike+PerformanceRating+RelationshipSatisfaction+
+                   StockOptionLevel+TotalWorkingYears+TrainingTimesLastYear+WorkLifeBalance+YearsAtCompany+
+                   YearsInCurrentRole+YearsSinceLastPromotion+YearsWithCurrManager
+                 ,data=train, family=binomial(link=logit)),direct="both")
+summary(logit3)
+loghat3<-predict(logit3,newdata=test,type="response")
+conf_table(loghat3,testy,"Logit3")
+auc_plot(loghat3,testy,"Logit3")
+
+#Logistic reg 4
+
+logit4<-step(glm(turnover~overtime_yes+Travel_Rarely+Travel_Frequently+sales.ex+hr+salesrep+single+lifesciences+male+
+                   Age+BusinessTravel+DailyRate+Department+DistanceFromHome
+                 +Education+EducationField+EnvironmentSatisfaction+Gender+
+                   JobInvolvement+JobLevel+JobRole+JobSatisfaction+MaritalStatus+
+                   MonthlyIncome+MonthlyRate+NumCompaniesWorked+
+                   OverTime+PercentSalaryHike+PerformanceRating+RelationshipSatisfaction+
+                   StockOptionLevel+TotalWorkingYears+TrainingTimesLastYear+WorkLifeBalance+YearsAtCompany+
+                   YearsInCurrentRole+YearsSinceLastPromotion+YearsWithCurrManager
+                 ,data=train, family=binomial(link=logit)),direct="both")
+summary(logit4)
+loghat4<-predict(logit4,newdata=test,type="response")
+conf_table(loghat4,testy,"Logit4")
+auc_plot(loghat4,testy,"Logit4")
+
+
+#Linear regression
+ols1<-lm(turnover~ overtime_yes+Travel_Rarely+Travel_Frequently+salesrep+single+male+
+           Age+BusinessTravel+DistanceFromHome
+         +Education+EnvironmentSatisfaction+Gender+
+           JobInvolvement+JobLevel+JobRole+JobSatisfaction+MaritalStatus+
+           MonthlyIncome+MonthlyRate+NumCompaniesWorked+
+           OverTime+PercentSalaryHike+PerformanceRating+
+           StockOptionLevel+TotalWorkingYears+TrainingTimesLastYear+WorkLifeBalance+YearsAtCompany+
+           YearsInCurrentRole+YearsSinceLastPromotion+YearsWithCurrManager, data=train)
+
+summary(ols1)
+
+# Neural Network Model 
+library(neuralnet)
+attrition$turnover <- as.factor(attrition$turnover)
+# Neural Network Estimation
+# Simple 
+nnet1 <- neuralnet(turnover ~., data=attrition, linear.output = FALSE)
+plot(nnet1)
+
+# Confusion Matrix & Misclassification Error - test data
+pred1   <- predict(nnet1,test)
+pred1   <- pred1[,2]
+conf_table(pred1,t
+           auc_plot(pred1,testy,"Neural Network Model-Simple") esty,"NeuralNet")
+
+#RandomForest
+install.packages("randomForest") 
+if(!(require(randomForest)))install.packages("randomForest")
+
+rf1<-randomForest(formula=turnover~.,overtime_yes+Travel_Rarely+Travel_Frequently+sales.ex+hr+salesrep+single+lifesciences+male+
+                    Age+BusinessTravel+DailyRate+Department+DistanceFromHome
+                  +Education+EducationField+EnvironmentSatisfaction+Gender+
+                    JobInvolvement+JobLevel+JobRole+JobSatisfaction+MaritalStatus+
+                    MonthlyIncome+MonthlyRate+NumCompaniesWorked+
+                    OverTime+PercentSalaryHike+PerformanceRating+RelationshipSatisfaction+
+                    StockOptionLevel+TotalWorkingYears+TrainingTimesLastYear+WorkLifeBalance+YearsAtCompany+
+                    YearsInCurrentRole+YearsSinceLastPromotion+YearsWithCurrManager,data=train,mtry=25,ntree=4000)
+summary(rf1)
+rfhat1 <- predict(randf1,newdata=test,type="prob")
+randfp <- randfp[,2]
+auc_plot(rfhat1,testy,"Random Forest Regression Model")
+
+#Random Forest 
+rf_spec <- rand_forest(
+  mtry = tune(),
+  trees = tune(),
+  min_n = tune()) %>%
+  set_mode("classification") %>% 
+  set_engine(engine = "ranger")
+
+rf_grid <-
+  crossing(mtry = c(9:17),min_n = c(seq(1,20,5)),trees = c(500))
+
+rf_model <- 
+  workflow() %>%
+  add_recipe(hr_recipe) %>%
+  add_model(rf_spec)
+
+
+rf_tune <- tune_grid(rf_model,
+                     resamples = train_fold,
+                     grid = rf_grid
+)
+highest_acc <- rf_tune %>% select_best("accuracy")
+
+rf_tune %>% autoplot()
+rf_tune %>% collect_metrics() %>% arrange(-mean)
+
+#Logistic Model
+logis_recipe <-
+  recipe(attrition ~ ., data = train_data) %>%
+  step_dummy(all_nominal_predictors(), -all_outcomes()) %>%
+  step_zv(all_numeric()) %>%
+  step_smote(attrition, over_ratio = 0.9, seed = 31967) %>%
+  step_normalize(all_numeric())
+# summary(logis_recipe)
+
